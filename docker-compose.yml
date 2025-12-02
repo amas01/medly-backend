@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: medly_api
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+psycopg://medly:medly@db:5432/medlydb
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16
+    container_name: medly_db
+    restart: always
+    environment:
+      POSTGRES_USER: medly
+      POSTGRES_PASSWORD: medly
+      POSTGRES_DB: medlydb
+    ports:
+      - "5433:5432"
+    volumes:
+      - medly_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U medly -d medlydb"]
+      interval: 3s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  medly_pgdata:
